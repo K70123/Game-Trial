@@ -591,23 +591,30 @@ function createEnemies(){
         let valid = false;
 
         while(!valid){
-
+        
             const x =
                 Math.random()*220-110;
-
+        
             const z =
                 Math.random()*220-110;
-
+        
+            const distanceFromPlayer =
+                Math.sqrt(
+                    x*x + z*z
+                );
+        
             if(
                 !isPositionInsideBuilding(x,z)
+                &&
+                distanceFromPlayer > 35
             ){
-
+        
                 enemy.position.set(
                     x,
                     0,
                     z
                 );
-
+        
                 valid = true;
             }
         }
@@ -718,23 +725,26 @@ function setupControls(){
     );
 
     window.addEventListener(
-        "click",
-        ()=>{
+    "click",
+    ()=>{
 
-            if(gameEnded)
-                return;
-
-            if(!locked){
-
-                document.body
-                .requestPointerLock();
-
-                return;
-            }
-
-            shoot();
+        // BLOCK clicks while menu is open
+        if(
+            document.getElementById("menu")
+            .style.display !== "none"
+        ){
+            return;
         }
-    );
+
+        if(gameEnded)
+            return;
+
+        if(!locked)
+            return;
+
+        shoot();
+    }
+);
 
     document.addEventListener(
         "pointerlockchange",
