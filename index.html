@@ -229,6 +229,8 @@ let sprintSpeed = 0.7;
 
 let ammo = 30;
 
+let gameStarted = false;
+
 let player = {
     health:100
 };
@@ -319,7 +321,16 @@ function init(){
 }
 
 function startGame(){
+
+    gameStarted = true;
+
+    document
+    .getElementById("menu")
+    .style.display = "none";
+
     themeMusic.pause();
+
+    bgMusic.play();
 
     document.body.requestPointerLock();
 
@@ -327,10 +338,6 @@ function startGame(){
         "none";
 
     locked = true;
-
-    document
-    .getElementById("menu")
-    .style.display = "none";
 }
 
 function createLights(){
@@ -725,26 +732,38 @@ function setupControls(){
     );
 
     window.addEventListener(
-    "click",
-    ()=>{
+        "click",
+        (e)=>{
 
-        // BLOCK clicks while menu is open
-        if(
-            document.getElementById("menu")
-            .style.display !== "none"
-        ){
-            return;
+            const menu =
+                document.getElementById("menu");
+
+            // MENU IS OPEN
+            if(menu.style.display !== "none"){
+
+                // ONLY START BUTTON WORKS
+                if(e.target.id === "startBtn"){
+                    startGame();
+                }
+
+                return;
+            }
+
+            // GAME OVER
+            if(gameEnded)
+                return;
+
+            // IF POINTER LOCK LOST
+            if(!locked){
+
+                document.body.requestPointerLock();
+                return;
+            }
+
+            // SHOOT
+            shoot();
         }
-
-        if(gameEnded)
-            return;
-
-        if(!locked)
-            return;
-
-        shoot();
-    }
-);
+    );
 
     document.addEventListener(
         "pointerlockchange",
@@ -754,20 +773,15 @@ function setupControls(){
                 document.pointerLockElement
                 === document.body;
 
-            if(!locked && !gameEnded){
-
-                document
-                .getElementById("menu")
-                .style.display = "flex";
+            if(
+                !locked &&
+                !gameEnded
+            ){
 
                 bgMusic.pause();
 
                 document.body.style.cursor =
                     "default";
-
-            } else if(!gameEnded){
-
-                bgMusic.play();
             }
         }
     );
@@ -983,7 +997,12 @@ function shoot(){
 
 function updateEnemies(){
 
-    if(gameEnded) return;
+    // DO NOT RUN BEFORE GAME STARTS
+    if(!gameStarted)
+        return;
+
+    if(gameEnded)
+        return;
 
     enemyList.forEach(enemy=>{
 
@@ -1009,17 +1028,27 @@ function updateEnemies(){
 
             player.health -= 0.25;
 
+            dramaticDamageEffect();
+
             if(Math.random() < 0.03){
+
                 damageSound.currentTime = 0;
                 damageSound.play();
-            } 
+            }
+
+            camera.position.x +=
+                (Math.random()-0.5)
+                * 0.08;
+
+            camera.position.y +=
+                (Math.random()-0.5)
+                * 0.05;
         }
         else {
 
             sword.rotation.z = -0.4;
         }
 
-        // RANDOMIZED MOVEMENT
         if(
             distance > 4 &&
             (
@@ -1045,21 +1074,6 @@ function updateEnemies(){
                     nextPosition
                 );
             }
-        }
-
-        if(distance < 5){
-
-            player.health -= 0.25;
-
-            dramaticDamageEffect();
-
-            camera.position.x +=
-                (Math.random()-0.5)
-                * 0.08;
-
-            camera.position.y +=
-                (Math.random()-0.5)
-                * 0.05;
         }
     });
 }
